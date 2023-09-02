@@ -1,0 +1,19 @@
+output: 'lib/src/whisper_bindings.dart'
+headers:
+  entry-points:
+    - 'whisper.h'
+  include-directives:
+    - '**whisper.h'
+name: 'WhisperBindings'
+structs:
+  dependency-only: opaque
+functions:
+  include:
+    - '.*'
+  symbol-address:
+    include:
+      - '.*'
+description: 'Bindings to OpenAI Whisper model in cpp' 
+comments:
+  style: any
+  length: full
