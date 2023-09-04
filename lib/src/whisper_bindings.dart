@@ -1828,28 +1828,28 @@ class _SymbolAddresses {
       get whisper_model_type_readable =>
           _library._whisper_model_type_readablePtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_eot => _library._whisper_token_eotPtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_sot => _library._whisper_token_sotPtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_prev => _library._whisper_token_prevPtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_solm => _library._whisper_token_solmPtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_not => _library._whisper_token_notPtr;
   ffi.Pointer<
-          ffi.NativeFunction<
-              whisper_token Function(ffi.Pointer<whisper_context>)>>
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_beg => _library._whisper_token_begPtr;
   ffi.Pointer<
           ffi.NativeFunction<
@@ -2091,11 +2091,13 @@ final class whisper_model_loader extends ffi.Struct {
           ffi.Size Function(ffi.Pointer<ffi.Void> ctx,
               ffi.Pointer<ffi.Void> output, ffi.Size read_size)>> read;
 
-  external ffi.Pointer<
-      ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Void> ctx)>> eof;
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Void> ctx)>>
+      eof;
 
-  external ffi.Pointer<
-      ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> ctx)>> close;
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> ctx)>>
+      close;
 }
 
 /// Available sampling strategies

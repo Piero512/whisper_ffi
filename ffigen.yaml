@@ -7,6 +7,10 @@ headers:
 name: 'WhisperBindings'
 structs:
   dependency-only: opaque
+typedefs:
+  expose-typedefs:
+    include:
+      - '.*'
 functions:
   include:
     - '.*'
