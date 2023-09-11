@@ -51,11 +51,12 @@ class WhisperModel implements Finalizable {
       if (modelCtx == nullptr) {
         throw ArgumentError.value(pathToModel, 'pathToModel');
       }
-      final params = calloc.call<whisper_full_params>();
-      params.ref = ffi.whisper_full_default_params(
+      final params = ffi.whisper_full_default_params_by_ref(
         whisper_sampling_strategy.WHISPER_SAMPLING_BEAM_SEARCH,
       );
       params.ref.language = language.toNativeUtf8().cast();
+      params.ref.print_progress = true;
+      // params.ref.speed_up = true;
       final whisperModel = WhisperModel._(ffi, modelCtx, params);
       _finalizer?.attach(
         whisperModel,
@@ -71,17 +72,39 @@ class WhisperModel implements Finalizable {
     return wFfi.whisper_print_system_info().cast<Utf8>().toDartString();
   }
 
+  Iterable<String> retrieveAllSegments() sync* {
+    final segmentCount = wFfi.whisper_full_n_segments(ctx);
+    for (var i = 0; i < segmentCount; i++) {
+      yield wFfi
+          .whisper_full_get_segment_text(ctx, i)
+          .cast<Utf8>()
+          .toDartString();
+    }
+  }
+
   void whisperFull(
     Pointer<Float> samples,
     int sampleCount, {
     NativeCallable<WhisperProgressCb>? progressCb,
+    Pointer<Void>? progressCbData,
     NativeCallable<WhisperNewSegmentCb>? newSegmentCb,
+    Pointer<Void>? newSegmentCbData,
   }) {
     if (progressCb != null) {
-      params.ref.progress_callback = progressCb.nativeFunction.cast();
+      final ptr = progressCb.nativeFunction;
+      assert(ptr != nullptr);
+      params.ref.progress_callback = ptr.cast();
+    }
+    if (progressCbData != null) {
+      params.ref.progress_callback_user_data = progressCbData;
     }
     if (newSegmentCb != null) {
-      params.ref.progress_callback = newSegmentCb.nativeFunction.cast();
+      final ptr = newSegmentCb.nativeFunction;
+      assert(ptr != nullptr);
+      params.ref.new_segment_callback = ptr.cast();
+    }
+    if (newSegmentCbData != null) {
+      params.ref.new_segment_callback_user_data = newSegmentCbData;
     }
     final retval = wFfi.whisper_full(ctx, params.ref, samples, sampleCount);
     if (retval != 0) {
@@ -103,6 +126,9 @@ class WhisperModel implements Finalizable {
     if (!disposed) {
       disposed = true;
       _finalizer?.detach(this);
+      malloc.free(params.ref.language);
+      params.ref.language = nullptr;
+      wFfi.whisper_free_params(params);
       wFfi.whisper_free(ctx);
     }
   }

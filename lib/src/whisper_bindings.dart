@@ -139,6 +139,43 @@ class WhisperBindings {
   late final _whisper_init_state = _whisper_init_statePtr.asFunction<
       ffi.Pointer<whisper_state> Function(ffi.Pointer<whisper_context>)>();
 
+  /// Given a context, enable use of OpenVINO for encode inference.
+  /// model_path: Optional path to OpenVINO encoder IR model. If set to nullptr,
+  /// the path will be generated from the ggml model path that was passed
+  /// in to whisper_init_from_file. For example, if 'path_model' was
+  /// "/path/to/ggml-base.en.bin", then OpenVINO IR model path will be
+  /// assumed to be "/path/to/ggml-base.en-encoder-openvino.xml".
+  /// device: OpenVINO device to run inference on ("CPU", "GPU", etc.)
+  /// cache_dir: Optional cache directory that can speed up init time, especially for
+  /// GPU, by caching compiled 'blobs' there.
+  /// Set to nullptr if not used.
+  /// Returns 0 on success. If OpenVINO is not enabled in build, this simply returns 1.
+  int whisper_ctx_init_openvino_encoder(
+    ffi.Pointer<whisper_context> ctx,
+    ffi.Pointer<ffi.Char> model_path,
+    ffi.Pointer<ffi.Char> device,
+    ffi.Pointer<ffi.Char> cache_dir,
+  ) {
+    return _whisper_ctx_init_openvino_encoder(
+      ctx,
+      model_path,
+      device,
+      cache_dir,
+    );
+  }
+
+  late final _whisper_ctx_init_openvino_encoderPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(
+              ffi.Pointer<whisper_context>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>)>>('whisper_ctx_init_openvino_encoder');
+  late final _whisper_ctx_init_openvino_encoder =
+      _whisper_ctx_init_openvino_encoderPtr.asFunction<
+          int Function(ffi.Pointer<whisper_context>, ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)>();
+
   /// Frees all allocated memory
   void whisper_free(
     ffi.Pointer<whisper_context> ctx,
@@ -167,6 +204,21 @@ class WhisperBindings {
       'whisper_free_state');
   late final _whisper_free_state = _whisper_free_statePtr
       .asFunction<void Function(ffi.Pointer<whisper_state>)>();
+
+  void whisper_free_params(
+    ffi.Pointer<whisper_full_params> params,
+  ) {
+    return _whisper_free_params(
+      params,
+    );
+  }
+
+  late final _whisper_free_paramsPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<whisper_full_params>)>>(
+      'whisper_free_params');
+  late final _whisper_free_params = _whisper_free_paramsPtr
+      .asFunction<void Function(ffi.Pointer<whisper_full_params>)>();
 
   /// Convert RAW PCM audio to log mel spectrogram.
   /// The resulting spectrogram is stored inside the default state of the provided whisper context.
@@ -927,6 +979,21 @@ class WhisperBindings {
   late final _whisper_token_sot = _whisper_token_sotPtr
       .asFunction<int Function(ffi.Pointer<whisper_context>)>();
 
+  int whisper_token_solm(
+    ffi.Pointer<whisper_context> ctx,
+  ) {
+    return _whisper_token_solm(
+      ctx,
+    );
+  }
+
+  late final _whisper_token_solmPtr = _lookup<
+      ffi.NativeFunction<
+          whisper_token Function(
+              ffi.Pointer<whisper_context>)>>('whisper_token_solm');
+  late final _whisper_token_solm = _whisper_token_solmPtr
+      .asFunction<int Function(ffi.Pointer<whisper_context>)>();
+
   int whisper_token_prev(
     ffi.Pointer<whisper_context> ctx,
   ) {
@@ -942,19 +1009,19 @@ class WhisperBindings {
   late final _whisper_token_prev = _whisper_token_prevPtr
       .asFunction<int Function(ffi.Pointer<whisper_context>)>();
 
-  int whisper_token_solm(
+  int whisper_token_nosp(
     ffi.Pointer<whisper_context> ctx,
   ) {
-    return _whisper_token_solm(
+    return _whisper_token_nosp(
       ctx,
     );
   }
 
-  late final _whisper_token_solmPtr = _lookup<
+  late final _whisper_token_nospPtr = _lookup<
       ffi.NativeFunction<
           whisper_token Function(
-              ffi.Pointer<whisper_context>)>>('whisper_token_solm');
-  late final _whisper_token_solm = _whisper_token_solmPtr
+              ffi.Pointer<whisper_context>)>>('whisper_token_nosp');
+  late final _whisper_token_nosp = _whisper_token_nospPtr
       .asFunction<int Function(ffi.Pointer<whisper_context>)>();
 
   int whisper_token_not(
@@ -1005,25 +1072,35 @@ class WhisperBindings {
       .asFunction<int Function(ffi.Pointer<whisper_context>, int)>();
 
   /// Task tokens
-  int whisper_token_translate() {
-    return _whisper_token_translate();
+  int whisper_token_translate(
+    ffi.Pointer<whisper_context> ctx,
+  ) {
+    return _whisper_token_translate(
+      ctx,
+    );
   }
 
-  late final _whisper_token_translatePtr =
-      _lookup<ffi.NativeFunction<whisper_token Function()>>(
-          'whisper_token_translate');
-  late final _whisper_token_translate =
-      _whisper_token_translatePtr.asFunction<int Function()>();
+  late final _whisper_token_translatePtr = _lookup<
+      ffi.NativeFunction<
+          whisper_token Function(
+              ffi.Pointer<whisper_context>)>>('whisper_token_translate');
+  late final _whisper_token_translate = _whisper_token_translatePtr
+      .asFunction<int Function(ffi.Pointer<whisper_context>)>();
 
-  int whisper_token_transcribe() {
-    return _whisper_token_transcribe();
+  int whisper_token_transcribe(
+    ffi.Pointer<whisper_context> ctx,
+  ) {
+    return _whisper_token_transcribe(
+      ctx,
+    );
   }
 
-  late final _whisper_token_transcribePtr =
-      _lookup<ffi.NativeFunction<whisper_token Function()>>(
-          'whisper_token_transcribe');
-  late final _whisper_token_transcribe =
-      _whisper_token_transcribePtr.asFunction<int Function()>();
+  late final _whisper_token_transcribePtr = _lookup<
+      ffi.NativeFunction<
+          whisper_token Function(
+              ffi.Pointer<whisper_context>)>>('whisper_token_transcribe');
+  late final _whisper_token_transcribe = _whisper_token_transcribePtr
+      .asFunction<int Function(ffi.Pointer<whisper_context>)>();
 
   /// Performance information from the default state.
   void whisper_print_timings(
@@ -1064,6 +1141,23 @@ class WhisperBindings {
           'whisper_print_system_info');
   late final _whisper_print_system_info = _whisper_print_system_infoPtr
       .asFunction<ffi.Pointer<ffi.Char> Function()>();
+
+  /// NOTE: this function allocates memory, and it is the responsibility of the caller to free the pointer - see whisper_free_params()
+  ffi.Pointer<whisper_full_params> whisper_full_default_params_by_ref(
+    int strategy,
+  ) {
+    return _whisper_full_default_params_by_ref(
+      strategy,
+    );
+  }
+
+  late final _whisper_full_default_params_by_refPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<whisper_full_params> Function(
+              ffi.Int32)>>('whisper_full_default_params_by_ref');
+  late final _whisper_full_default_params_by_ref =
+      _whisper_full_default_params_by_refPtr
+          .asFunction<ffi.Pointer<whisper_full_params> Function(int)>();
 
   whisper_full_params whisper_full_default_params(
     int strategy,
@@ -1297,6 +1391,25 @@ class WhisperBindings {
   late final _whisper_full_get_segment_t1_from_state =
       _whisper_full_get_segment_t1_from_statePtr
           .asFunction<int Function(ffi.Pointer<whisper_state>, int)>();
+
+  /// Get whether the next segment is predicted as a speaker turn
+  bool whisper_full_get_segment_speaker_turn_next(
+    ffi.Pointer<whisper_context> ctx,
+    int i_segment,
+  ) {
+    return _whisper_full_get_segment_speaker_turn_next(
+      ctx,
+      i_segment,
+    );
+  }
+
+  late final _whisper_full_get_segment_speaker_turn_nextPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Bool Function(ffi.Pointer<whisper_context>,
+              ffi.Int)>>('whisper_full_get_segment_speaker_turn_next');
+  late final _whisper_full_get_segment_speaker_turn_next =
+      _whisper_full_get_segment_speaker_turn_nextPtr
+          .asFunction<bool Function(ffi.Pointer<whisper_context>, int)>();
 
   /// Get the text of the specified segment
   ffi.Pointer<ffi.Char> whisper_full_get_segment_text(
@@ -1599,6 +1712,20 @@ class WhisperBindings {
       _whisper_bench_ggml_mul_mat_strPtr
           .asFunction<ffi.Pointer<ffi.Char> Function(int)>();
 
+  void whisper_set_log_callback(
+    whisper_log_callback callback,
+  ) {
+    return _whisper_set_log_callback(
+      callback,
+    );
+  }
+
+  late final _whisper_set_log_callbackPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(whisper_log_callback)>>(
+          'whisper_set_log_callback');
+  late final _whisper_set_log_callback = _whisper_set_log_callbackPtr
+      .asFunction<void Function(whisper_log_callback)>();
+
   late final addresses = _SymbolAddresses(this);
 }
 
@@ -1641,10 +1768,22 @@ class _SymbolAddresses {
               ffi.Pointer<whisper_context>)>> get whisper_init_state =>
       _library._whisper_init_statePtr;
   ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Int Function(
+              ffi.Pointer<whisper_context>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Char>)>> get whisper_ctx_init_openvino_encoder =>
+      _library._whisper_ctx_init_openvino_encoderPtr;
+  ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Pointer<whisper_context>)>>
       get whisper_free => _library._whisper_freePtr;
   ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<whisper_state>)>>
       get whisper_free_state => _library._whisper_free_statePtr;
+  ffi.Pointer<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<whisper_full_params>)>>
+      get whisper_free_params => _library._whisper_free_paramsPtr;
   ffi.Pointer<
       ffi.NativeFunction<
           ffi.Int Function(
@@ -1838,11 +1977,15 @@ class _SymbolAddresses {
   ffi.Pointer<
           ffi
           .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
+      get whisper_token_solm => _library._whisper_token_solmPtr;
+  ffi.Pointer<
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_prev => _library._whisper_token_prevPtr;
   ffi.Pointer<
           ffi
           .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
-      get whisper_token_solm => _library._whisper_token_solmPtr;
+      get whisper_token_nosp => _library._whisper_token_nospPtr;
   ffi.Pointer<
           ffi
           .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
@@ -1855,9 +1998,13 @@ class _SymbolAddresses {
           ffi.NativeFunction<
               whisper_token Function(ffi.Pointer<whisper_context>, ffi.Int)>>
       get whisper_token_lang => _library._whisper_token_langPtr;
-  ffi.Pointer<ffi.NativeFunction<whisper_token Function()>>
+  ffi.Pointer<
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_translate => _library._whisper_token_translatePtr;
-  ffi.Pointer<ffi.NativeFunction<whisper_token Function()>>
+  ffi.Pointer<
+          ffi
+          .NativeFunction<whisper_token Function(ffi.Pointer<whisper_context>)>>
       get whisper_token_transcribe => _library._whisper_token_transcribePtr;
   ffi.Pointer<
           ffi.NativeFunction<ffi.Void Function(ffi.Pointer<whisper_context>)>>
@@ -1867,6 +2014,11 @@ class _SymbolAddresses {
       get whisper_reset_timings => _library._whisper_reset_timingsPtr;
   ffi.Pointer<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>
       get whisper_print_system_info => _library._whisper_print_system_infoPtr;
+  ffi.Pointer<
+          ffi
+          .NativeFunction<ffi.Pointer<whisper_full_params> Function(ffi.Int32)>>
+      get whisper_full_default_params_by_ref =>
+          _library._whisper_full_default_params_by_refPtr;
   ffi.Pointer<ffi.NativeFunction<whisper_full_params Function(ffi.Int32)>>
       get whisper_full_default_params =>
           _library._whisper_full_default_paramsPtr;
@@ -1927,6 +2079,11 @@ class _SymbolAddresses {
               ffi.Int64 Function(ffi.Pointer<whisper_state>, ffi.Int)>>
       get whisper_full_get_segment_t1_from_state =>
           _library._whisper_full_get_segment_t1_from_statePtr;
+  ffi.Pointer<
+          ffi.NativeFunction<
+              ffi.Bool Function(ffi.Pointer<whisper_context>, ffi.Int)>>
+      get whisper_full_get_segment_speaker_turn_next =>
+          _library._whisper_full_get_segment_speaker_turn_nextPtr;
   ffi.Pointer<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Char> Function(
@@ -2004,6 +2161,8 @@ class _SymbolAddresses {
   ffi.Pointer<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function(ffi.Int)>>
       get whisper_bench_ggml_mul_mat_str =>
           _library._whisper_bench_ggml_mul_mat_strPtr;
+  ffi.Pointer<ffi.NativeFunction<ffi.Void Function(whisper_log_callback)>>
+      get whisper_set_log_callback => _library._whisper_set_log_callbackPtr;
 }
 
 /// C interface
@@ -2043,74 +2202,8 @@ final class whisper_context extends ffi.Opaque {}
 
 final class whisper_state extends ffi.Opaque {}
 
-final class whisper_token_data extends ffi.Struct {
-  /// token id
-  @whisper_token()
-  external int id;
-
-  /// forced timestamp token id
-  @whisper_token()
-  external int tid;
-
-  /// probability of the token
-  @ffi.Float()
-  external double p;
-
-  /// log probability of the token
-  @ffi.Float()
-  external double plog;
-
-  /// probability of the timestamp token
-  @ffi.Float()
-  external double pt;
-
-  /// sum of probabilities of all timestamp tokens
-  @ffi.Float()
-  external double ptsum;
-
-  /// start time of the token
-  @ffi.Int64()
-  external int t0;
-
-  /// end time of the token
-  @ffi.Int64()
-  external int t1;
-
-  /// voice length of the token
-  @ffi.Float()
-  external double vlen;
-}
-
-typedef whisper_token = ffi.Int;
-
-final class whisper_model_loader extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> context;
-
-  external ffi.Pointer<
-      ffi.NativeFunction<
-          ffi.Size Function(ffi.Pointer<ffi.Void> ctx,
-              ffi.Pointer<ffi.Void> output, ffi.Size read_size)>> read;
-
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Void> ctx)>>
-      eof;
-
-  external ffi
-      .Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> ctx)>>
-      close;
-}
-
-/// Available sampling strategies
-abstract class whisper_sampling_strategy {
-  /// similar to OpenAI's GreedyDecoder
-  static const int WHISPER_SAMPLING_GREEDY = 0;
-
-  /// similar to OpenAI's BeamSearchDecoder
-  static const int WHISPER_SAMPLING_BEAM_SEARCH = 1;
-}
-
 /// Parameters for the whisper_full() function
-/// If you chnage the order or add new parameters, make sure to update the default values in whisper.cpp:
+/// If you change the order or add new parameters, make sure to update the default values in whisper.cpp:
 /// whisper_full_default_params()
 final class whisper_full_params extends ffi.Struct {
   @ffi.Int32()
@@ -2186,9 +2279,17 @@ final class whisper_full_params extends ffi.Struct {
   @ffi.Bool()
   external bool speed_up;
 
+  /// enable debug_mode provides extra info (eg. Dump log_mel)
+  @ffi.Bool()
+  external bool debug_mode;
+
   /// overwrite the audio context size (0 = use default)
   @ffi.Int()
   external int audio_ctx;
+
+  /// enable tinydiarize speaker turn detection
+  @ffi.Bool()
+  external bool tdrz_enable;
 
   /// tokens to provide to the whisper decoder as initial prompt
   /// these are prepended to any existing text context from a previous call
@@ -2201,6 +2302,9 @@ final class whisper_full_params extends ffi.Struct {
 
   /// for auto-detection, set to nullptr, "" or "auto"
   external ffi.Pointer<ffi.Char> language;
+
+  @ffi.Bool()
+  external bool detect_language;
 
   /// ref: https://github.com/openai/whisper/blob/f82bc59f5ea234d4b97fb2860842ed38519f7e65/whisper/decoding.py#L89
   @ffi.Bool()
@@ -2263,6 +2367,17 @@ final class whisper_full_params extends ffi.Struct {
   external ffi.Pointer<ffi.Void> logits_filter_callback_user_data;
 }
 
+/// Available sampling strategies
+abstract class whisper_sampling_strategy {
+  /// similar to OpenAI's GreedyDecoder
+  static const int WHISPER_SAMPLING_GREEDY = 0;
+
+  /// similar to OpenAI's BeamSearchDecoder
+  static const int WHISPER_SAMPLING_BEAM_SEARCH = 1;
+}
+
+typedef whisper_token = ffi.Int;
+
 final class UnnamedStruct1 extends ffi.Struct {
   /// ref: https://github.com/openai/whisper/blob/f82bc59f5ea234d4b97fb2860842ed38519f7e65/whisper/transcribe.py#L264
   @ffi.Int()
@@ -2321,6 +2436,65 @@ typedef whisper_logits_filter_callback = ffi.Pointer<
             ffi.Int n_tokens,
             ffi.Pointer<ffi.Float> logits,
             ffi.Pointer<ffi.Void> user_data)>>;
+
+final class whisper_token_data extends ffi.Struct {
+  /// token id
+  @whisper_token()
+  external int id;
+
+  /// forced timestamp token id
+  @whisper_token()
+  external int tid;
+
+  /// probability of the token
+  @ffi.Float()
+  external double p;
+
+  /// log probability of the token
+  @ffi.Float()
+  external double plog;
+
+  /// probability of the timestamp token
+  @ffi.Float()
+  external double pt;
+
+  /// sum of probabilities of all timestamp tokens
+  @ffi.Float()
+  external double ptsum;
+
+  /// start time of the token
+  @ffi.Int64()
+  external int t0;
+
+  /// end time of the token
+  @ffi.Int64()
+  external int t1;
+
+  /// voice length of the token
+  @ffi.Float()
+  external double vlen;
+}
+
+final class whisper_model_loader extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> context;
+
+  external ffi.Pointer<
+      ffi.NativeFunction<
+          ffi.Size Function(ffi.Pointer<ffi.Void> ctx,
+              ffi.Pointer<ffi.Void> output, ffi.Size read_size)>> read;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Void> ctx)>>
+      eof;
+
+  external ffi
+      .Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void> ctx)>>
+      close;
+}
+
+/// Control logging output; default behavior is to print to stderr
+typedef whisper_log_callback = ffi
+    .Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char> line)>>;
 
 const int WHISPER_SAMPLE_RATE = 16000;
 
