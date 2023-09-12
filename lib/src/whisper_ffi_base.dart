@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:whisper_ffi/src/whisper_bindings.dart';
+import 'package:whisper_ffi/src/whisper_models.dart';
 
 typedef WhisperProgressCb = Void Function(
   Pointer<whisper_context>,
@@ -29,6 +31,8 @@ typedef WhisperNewSegmentNativeDartCb = void Function(
   Pointer<Void>,
 );
 
+typedef GetNewStateCallback = Pointer<whisper_state> Function();
+
 /// Wraps whisper bindings to allow a model
 class WhisperModel implements Finalizable {
   static NativeFinalizer? _finalizer;
@@ -39,11 +43,8 @@ class WhisperModel implements Finalizable {
 
   WhisperModel._(this.wFfi, this.ctx, this.params);
 
-  factory WhisperModel.fromPath(
-    WhisperBindings ffi,
-    String pathToModel, {
-    String language = 'es',
-  }) {
+  factory WhisperModel.fromPath(WhisperBindings ffi, String pathToModel,
+      {String language = 'es', String? prompt}) {
     return using((alloc) {
       _finalizer ??= NativeFinalizer(ffi.addresses.whisper_free.cast());
       final modelCtx = ffi.whisper_init_from_file(
@@ -55,8 +56,9 @@ class WhisperModel implements Finalizable {
         whisper_sampling_strategy.WHISPER_SAMPLING_BEAM_SEARCH,
       );
       params.ref.language = language.toNativeUtf8().cast();
-      params.ref.print_progress = true;
-      // params.ref.speed_up = true;
+      if (prompt != null) {
+        params.ref.initial_prompt = prompt.toNativeUtf8().cast();
+      }
       final whisperModel = WhisperModel._(ffi, modelCtx, params);
       _finalizer?.attach(
         whisperModel,
@@ -73,7 +75,6 @@ class WhisperModel implements Finalizable {
   }
 
   Iterable<String> retrieveAllSegments() sync* {
-    final segmentCount = wFfi.whisper_full_n_segments(ctx);
     for (var i = 0; i < segmentCount; i++) {
       yield wFfi
           .whisper_full_get_segment_text(ctx, i)
@@ -112,14 +113,72 @@ class WhisperModel implements Finalizable {
     }
   }
 
+  int get segmentCount => wFfi.whisper_full_n_segments(ctx);
+
   List<String> getAllSegments() {
     final retval = <String>[];
-    final genSegments = wFfi.whisper_full_n_segments(ctx);
-    for (int i = 0; i < genSegments; i++) {
+    for (int i = 0; i < segmentCount; i++) {
       final textPtr = wFfi.whisper_full_get_segment_text(ctx, i);
       retval.add(textPtr.cast<Utf8>().toDartString());
     }
     return retval;
+  }
+
+  Iterable<WhisperTranscriptionPart> retrieveTranscriptionParts(
+    int fromSegment,
+    int toSegment,
+  ) sync* {
+    for (int i = fromSegment; i < toSegment; i++) {
+      final start = wFfi.whisper_full_get_segment_t0(ctx, i);
+      final end = wFfi.whisper_full_get_segment_t1(ctx, i);
+      final transcriptPtr = wFfi.whisper_full_get_segment_text(ctx, i);
+      final byteLength = transcriptPtr.cast<Utf8>().length;
+      final decoder = Utf8Decoder(allowMalformed: true);
+      final out =
+          decoder.convert(transcriptPtr.cast<Uint8>().asTypedList(byteLength));
+
+      yield WhisperTranscriptionPart(
+        Duration(milliseconds: start * 10),
+        Duration(milliseconds: end * 10),
+        out,
+      );
+    }
+  }
+
+  Pointer<whisper_state> getNewState() {
+    return wFfi.whisper_init_state(ctx);
+  }
+
+  void releaseStateList(List<Pointer<whisper_state>> allocatedPtrs) {
+    for (final ptr in allocatedPtrs) {
+      wFfi.whisper_free_state(ptr);
+    }
+  }
+
+  T withNewStateCallback<T>(T Function(GetNewStateCallback) cb) {
+    List<Pointer<whisper_state>> allocatedPtrs = [];
+    allocator() {
+      final ptr = getNewState();
+      if (ptr != nullptr) {
+        allocatedPtrs.add(ptr);
+      }
+      return ptr;
+    }
+
+    bool isAsync = false;
+    try {
+      final result = cb(allocator);
+      if (result is Future) {
+        isAsync = true;
+        return (result.whenComplete(() => releaseStateList(allocatedPtrs))
+            as T);
+      }
+      return result;
+    } finally {
+      if (!isAsync) {
+        releaseStateList(allocatedPtrs);
+      }
+    }
   }
 
   void dispose() {
