@@ -115,13 +115,8 @@ class WhisperModel implements Finalizable {
 
   int get segmentCount => wFfi.whisper_full_n_segments(ctx);
 
-  List<String> getAllSegments() {
-    final retval = <String>[];
-    for (int i = 0; i < segmentCount; i++) {
-      final textPtr = wFfi.whisper_full_get_segment_text(ctx, i);
-      retval.add(textPtr.cast<Utf8>().toDartString());
-    }
-    return retval;
+  List<WhisperTranscriptionPart> getAllSegments() {
+    return retrieveTranscriptionParts(0, segmentCount).toList();
   }
 
   Iterable<WhisperTranscriptionPart> retrieveTranscriptionParts(
